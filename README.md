@@ -33,7 +33,7 @@
    1. Registrar la Task Definition en ECS
    2. Hacer el deployment seleccionando esta última TD creada en el punto anterior. ECS va a utilizar el método [rolling deployment](https://docs.aws.amazon.com/whitepapers/latest/overview-deployment-options/rolling-deployments.html)
    3. La suscripción al topic de mensajes se haría con una Lambda que parsee la data en JSON y corra el request POST en la API HTTP
-   4. Ver [diagrama.png]()
+   4. Ver [diagrama.svg]()
  
 Usar Docker (local). DB2Rest para la API 
 Crear network para correr ambos containers
