@@ -1,52 +1,4 @@
 # LATAM Airlines - Challenge DevSecOps/SRE
-
-## Ideas iniciales
-### Parte 1: Infraestructura e IaC
-1. Ingestar, almacenar y exponer datos
-   1. AWS SNS
-   2. PostgreSQL
-   3. ECS para servir la app containerizada y un ALB para escalar si es necesario
-2. Escribir codigo TF
-
-### Parte 2: Aplicaciones y flujo CI/CD
-1. (pendiente) Busca solución en DockerHub para servir contenido de la DB, API HTTP. ¿Estructurar los GET para apuntar a una URI con: "/dbname/q="? Ver opciones disponibles de la API
-2. Usar GitHub Actions para deployment?
-3. Ver DockerHub o AWS para (Guardar mensajes de un topic a la DB)
-4. Hacer diagrama en draw.io
-
-### Parte 3: Pruebas de Integración y Puntos Críticos de Calidad
-1. Test integración haciendo un healthcheck de la API confirmando que expone datos (usar un '/ping' o similar)
-2. (literal) Proponer otras pruebas de integración que validen que el sistema está funcionando
-correctamente y cómo se implementarían.
-3. (literal) Identificar posibles puntos críticos del sistema (a nivel de fallo o performance)
-diferentes al punto anterior y proponer formas de testearlos o medirlos (no
-implementar)
-4. (literal) Proponer cómo robustecer técnicamente el sistema para compensar o solucionar
-dichos puntos críticos
-
-### Parte 4: Métricas y Monitoreo - no requiere implementación
-1. 3 Métricas:
-   1. Que la API esté up and running (usar healthcheck)
-   2. Checkear puerto DB estableciendo conexión, o usar pg_isready (command) o un 'SELECT current_timestamp - pg_postmaster_start_time();' para ver el uptime
-   3. Confirmar que servicio pub/sub esté recibiendo/enviando mensajes 
-2. Grafana? Mostraría las mencionadas + basic health of all services/resources
-   1. PostgreSQL integration for Grafana Cloud
-   2. Otras integraciones nativas de Grafana + Prometheus
-3. (literal) Describe a grandes rasgos cómo sería la implementación de esta herramienta en la
-nube y cómo esta recolectaría las métricas del sistema
-4. (literal) Describe cómo cambiará la visualización si escalamos la solución a 50 sistemas
-similares y qué otras métricas o formas de visualización nos permite desbloquear
-este escalamiento
-5. (literal) Comenta qué dificultades o limitaciones podrían surgir a nivel de observabilidad de
-los sistemas de no abordarse correctamente el problema de escalabilidad
-
-### Parte 5: Alertas y SRE (Opcional) - no requiere implementación
-1. Basado en
-   1. **4.1.1** Si responde, y menor a 200 ms: OK. +200 ms: WARN. +500 ms o down: ALERT/CRITICAL.  Agregar checks de integridad de la data que devuelve de la DB?
-   2. **4.1.2** Same
-   3. **4.1.3** Same? 
-2. Usar 99.9 o 99.99% uptime y agregar response times al SLO
-
 ## Implementación
 ### Parte 1 (Infra)
 1. Crear VPC nueva con rango IPv4 a elección (ejemplo: `10.0.0.0/16`)
@@ -56,11 +8,11 @@ los sistemas de no abordarse correctamente el problema de escalabilidad
       2. Obviamente la ruta local para `10.0.0.0/16` (o para el rango que hayamos elegido al principio)
 2. Crear AWS SNS topic llamado `latam-challenge`
    1. TO-DO: agregar SQS luego para no perder mensajes
-3. Crear RDS PostgreSQL v17 (instancia tipo: 'db.t4g.micro' por ahora) llamada 'db01', en una sola AZ (para instancias de prueba y para mantener el costo bajo no es necesario que la DB sea Multi-AZ)
+3. Crear RDS PostgreSQL v17 (instancia tipo: `db.t4g.micro` por ahora) llamada 'db01', en una sola AZ (para instancias de prueba y para mantener el costo bajo no es necesario que la DB sea Multi-AZ)
    1. Sólo acceso privado (no asignar IP pública)
    2. Agregar Security Group para limitar el acceso sólo desde IPs privadas dentro del rango elegido al principio
    3. Sin backups (snapshots) en esta etapa de prueba
-4. Para la API HTTP (lectura y escritura) usaremos [DB2Rest](https://db2rest.com/) en ECS
+4. Para la API HTTP (lectura y escritura) usaremos [DB2Rest](https://db2rest.com/) en ECS Fargate
    1. Localmente levantarlo como prueba`docker run -p 8080:8080 --name db2rest -e DB_URL='jdbc:postgresql://127.0.0.1:5432/latam?currentSchema=public' -e DB_USER=postgres -e DB_PASSWORD=postgres -d kdhrubo/db2rest:latest`
    2. En la task definition del servicio vamos a utilizar las variables de entorno (`DB_URL`, `DB_USER`, `DB_PASSWORD`, etc.) para los inputs usados manualmente (arriba), y usar SSM Parameter Store (o Secrets Manager) para acceder a la contraseña de forma segura a la hora de hacer el deployment. Para pruebas podemos hardcodearla.
    3. Esto nos va a permitir: 
@@ -72,8 +24,7 @@ los sistemas de no abordarse correctamente el problema de escalabilidad
       4. Documentación oficial de la herramienta: https://db2rest.com/docs/intro
       5. TO-DO: en mis pruebas locales noté que la respuesta cuando se hace un GET incluye los caracteres totales del tipo de columna, es decir que si la columna `flight_number` es `character(10)` la repsuesta va a ser `LA407-----` (caracter `-` reemplaza a los espacios por un tema del formato Markdown que se utiliza en este README)
 5. Terraform
-   1. Queda pendiente utilizar S3 para que Terraform pueda manejar el `statefile` de forma remota y agilizar la implementación
-   2. Ver archivos en directorio [terraform](terraform)
+   1. WIP
 
 
 ### Parte 2 (App)
